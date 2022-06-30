@@ -1,0 +1,36 @@
+{
+  "name": "eslint-plugin-react-camel-case",
+  "version": "0.0.0",
+  "description": "ESLint rules for camelCasing React props",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "react",
+    "svg",
+    "props",
+    "camelCase",
+    "camel case"
+  ],
+  "author": "Derek Foster",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "rules/"
+  ],
+  "devDependencies": {
+    "eslint": ">=3.0.0"
+  },
+  "engines": {
+    "node": ">=5.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fostimus/eslint-plugin-react-camel-case.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fostimus/eslint-plugin-react-camel-case/issues"
+  },
+  "homepage": "https://github.com/fostimus/eslint-plugin-react-camel-case"
+}
