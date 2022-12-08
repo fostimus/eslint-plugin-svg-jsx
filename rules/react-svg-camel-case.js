@@ -24,11 +24,19 @@ module.exports = {
   meta: {
     type: "problem",
     messages: {
-      dashedProps: "JSX: found dashes on prop {{ propName }} on {{ tagName }}.",
+      dashedProp: "JSX: found dashes on prop {{ propName }} on {{ tagName }}.",
+      invalidProp:
+        "JSX prop is invalid; - character is the last character of the prop.",
     },
-    fixable: 'code',
+    fixable: "code",
   },
   create(context) {
+    // console.log(context.getSourceCode())
+    // TODO: use allowed prefixes to NOT report an error
+    const ALLOWED_PREFIXES = ["aria", "data"];
+    // TODO: allow dashes if the JSX element is a custom HTML element
+
+    // from react/jsx-no-multi-spaces
     function getPropName(propNode) {
       switch (propNode.type) {
         case "JSXSpreadAttribute":
@@ -50,9 +58,15 @@ module.exports = {
       switch (jsxNode.type) {
         case "JSXOpeningElement":
           return jsxNode.name.name;
+        case "JSXIdentifier":
+          return propNode.name;
         default:
-          return "";
+          return "Tag name not found";
       }
+    }
+
+    function isCustomHTMLElement(node) {
+      return getJSXTagName(node).includes("-");
     }
 
     return {
@@ -60,33 +74,43 @@ module.exports = {
         node.attributes.forEach((attr) => {
           const propName = getPropName(attr);
 
-          if (propName.includes("-")) {
-            context.report({
-              node,
-              messageId: "dashedProps",
-              data: {
-                propName,
-                tagName: getJSXTagName(node),
-              },
-              fix(fixer) {
-                let newPropName = propName;
-                while (newPropName.includes("-")) {
-                  const indexOfDash = newPropName.indexOf("-");
-                  // TODO: need to verify there actually is a char after the dash
-                  const charAfterDash = newPropName.charAt(indexOfDash + 1);
+          if (
+            propName.includes("-") &&
+            !isCustomHTMLElement(node) &&
+            !ALLOWED_PREFIXES.some((prefix) => propName.startsWith(prefix))
+          ) {
+            if (propName.charAt(propName.length - 1) === "-") {
+              context.report({
+                node,
+                messageId: "invalidProp",
+              });
+            } else {
+              context.report({
+                node,
+                messageId: "dashedProp",
+                data: {
+                  propName,
+                  tagName: getJSXTagName(node),
+                },
+                fix(fixer) {
+                  let newPropName = propName;
+                  while (newPropName.includes("-")) {
+                    const indexOfDash = newPropName.indexOf("-");
+                    const charAfterDash = newPropName.charAt(indexOfDash + 1);
 
-                  newPropName = `${newPropName.substring(
-                    0,
-                    indexOfDash
-                  )}${charAfterDash.toUpperCase()}${newPropName.substring(
-                    indexOfDash + 2,
-                    newPropName.length
-                  )}`;
-                }
+                    newPropName = `${newPropName.substring(
+                      0,
+                      indexOfDash
+                    )}${charAfterDash.toUpperCase()}${newPropName.substring(
+                      indexOfDash + 2,
+                      newPropName.length
+                    )}`;
+                  }
 
-                return fixer.replaceText(attr.name, newPropName);
-              },
-            });
+                  return fixer.replaceText(attr.name, newPropName);
+                },
+              });
+            }
           }
         });
       },
