@@ -13,9 +13,10 @@ module.exports = {
   meta: {
     type: "problem",
     messages: {
-      dashedProp: "JSX: found dashes on prop {{ propName }} on {{ tagName }}.",
+      fixableProp:
+        "JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.",
       invalidProp:
-        "JSX prop is invalid; - character is the last character of the prop.",
+        "JSX prop is invalid; the last character of the prop is not allowed. Not fixable.",
     },
     fixable: "code",
   },
@@ -53,17 +54,37 @@ module.exports = {
       return getJSXTagName(node).includes("-");
     }
 
+    function getCamelCasedString(str, charDelimiter) {
+      let newPropName = str;
+      while (newPropName.includes(charDelimiter)) {
+        const indexOfDash = newPropName.indexOf(charDelimiter);
+        const charAfterDash = newPropName.charAt(indexOfDash + 1);
+
+        newPropName = `${newPropName.substring(
+          0,
+          indexOfDash
+        )}${charAfterDash.toUpperCase()}${newPropName.substring(
+          indexOfDash + 2,
+          newPropName.length
+        )}`;
+      }
+      return newPropName;
+    }
+
+    function reportError() {}
+
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
           const propName = getPropName(attr);
 
+          const dash = "-";
           if (
-            propName.includes("-") &&
+            propName.includes(dash) &&
             !isCustomHTMLElement(node) &&
             !ALLOWED_PREFIXES.some((prefix) => propName.startsWith(prefix))
           ) {
-            if (propName.charAt(propName.length - 1) === "-") {
+            if (propName.charAt(propName.length - 1) === dash) {
               context.report({
                 node,
                 messageId: "invalidProp",
@@ -71,27 +92,17 @@ module.exports = {
             } else {
               context.report({
                 node,
-                messageId: "dashedProp",
+                messageId: "fixableProp",
                 data: {
                   propName,
                   tagName: getJSXTagName(node),
+                  fixableCharacter: "dashes",
                 },
                 fix(fixer) {
-                  let newPropName = propName;
-                  while (newPropName.includes("-")) {
-                    const indexOfDash = newPropName.indexOf("-");
-                    const charAfterDash = newPropName.charAt(indexOfDash + 1);
-
-                    newPropName = `${newPropName.substring(
-                      0,
-                      indexOfDash
-                    )}${charAfterDash.toUpperCase()}${newPropName.substring(
-                      indexOfDash + 2,
-                      newPropName.length
-                    )}`;
-                  }
-
-                  return fixer.replaceText(attr.name, newPropName);
+                  return fixer.replaceText(
+                    attr.name,
+                    getCamelCasedString(propName, dash)
+                  );
                 },
               });
             }
