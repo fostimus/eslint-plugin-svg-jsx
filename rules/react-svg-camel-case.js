@@ -26,6 +26,7 @@ module.exports = {
     messages: {
       dashedProps: "JSX: found dashes on prop {{ propName }} on {{ tagName }}.",
     },
+    fixable: 'code',
   },
   create(context) {
     function getPropName(propNode) {
@@ -68,7 +69,22 @@ module.exports = {
                 tagName: getJSXTagName(node),
               },
               fix(fixer) {
-                return null;
+                let newPropName = propName;
+                while (newPropName.includes("-")) {
+                  const indexOfDash = newPropName.indexOf("-");
+                  // TODO: need to verify there actually is a char after the dash
+                  const charAfterDash = newPropName.charAt(indexOfDash + 1);
+
+                  newPropName = `${newPropName.substring(
+                    0,
+                    indexOfDash
+                  )}${charAfterDash.toUpperCase()}${newPropName.substring(
+                    indexOfDash + 2,
+                    newPropName.length
+                  )}`;
+                }
+
+                return fixer.replaceText(attr.name, newPropName);
               },
             });
           }
