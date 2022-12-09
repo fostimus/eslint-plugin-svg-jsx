@@ -3,8 +3,6 @@
  * @author Derek Foster
  */
 
-"use strict";
-
 //------------------------------------------------------------------------------
 // Rule Definition
 //------------------------------------------------------------------------------
@@ -20,45 +18,45 @@ module.exports = {
     },
     fixable: "code",
   },
-  create(context) {
-    const ALLOWED_PREFIXES = ["aria", "data"];
+  create (context) {
+    const ALLOWED_PREFIXES = ["aria", "data"]
 
     // from react/jsx-no-multi-spaces
-    function getPropName(propNode) {
+    function getPropName (propNode) {
       switch (propNode.type) {
         case "JSXSpreadAttribute":
-          return context.getSourceCode().getText(propNode.argument);
+          return context.getSourceCode().getText(propNode.argument)
         case "JSXIdentifier":
-          return propNode.name;
+          return propNode.name
         case "JSXMemberExpression":
-          return `${getPropName(propNode.object)}.${propNode.property.name}`;
+          return `${getPropName(propNode.object)}.${propNode.property.name}`
         default:
           return propNode.name
             ? propNode.name.name
             : `${context.getSourceCode().getText(propNode.object)}.${
                 propNode.property.name
-              }`; // needed for typescript-eslint parser
+              }` // needed for typescript-eslint parser
       }
     }
 
-    function getJSXTagName(jsxNode) {
+    function getJSXTagName (jsxNode) {
       switch (jsxNode.type) {
         case "JSXIdentifier":
-          return propNode.name;
+          return propNode.name
         default:
-          return jsxNode.name.name;
+          return jsxNode.name.name
       }
     }
 
-    function isCustomHTMLElement(node) {
-      return getJSXTagName(node).includes("-");
+    function isCustomHTMLElement (node) {
+      return getJSXTagName(node).includes("-")
     }
 
-    function getCamelCasedString(str, charDelimiter) {
-      let newPropName = str;
+    function getCamelCasedString (str, charDelimiter) {
+      let newPropName = str
       while (newPropName.includes(charDelimiter)) {
-        const indexOfDash = newPropName.indexOf(charDelimiter);
-        const charAfterDash = newPropName.charAt(indexOfDash + 1);
+        const indexOfDash = newPropName.indexOf(charDelimiter)
+        const charAfterDash = newPropName.charAt(indexOfDash + 1)
 
         newPropName = `${newPropName.substring(
           0,
@@ -66,17 +64,17 @@ module.exports = {
         )}${charAfterDash.toUpperCase()}${newPropName.substring(
           indexOfDash + 2,
           newPropName.length
-        )}`;
+        )}`
       }
-      return newPropName;
+      return newPropName
     }
     
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
-          const propName = getPropName(attr);
+          const propName = getPropName(attr)
 
-          const dash = "-";
+          const dash = "-"
           if (
             propName.includes(dash) &&
             !isCustomHTMLElement(node) &&
@@ -86,7 +84,7 @@ module.exports = {
               context.report({
                 node,
                 messageId: "invalidProp",
-              });
+              })
             } else {
               context.report({
                 node,
@@ -96,17 +94,17 @@ module.exports = {
                   tagName: getJSXTagName(node),
                   fixableCharacter: "dashes",
                 },
-                fix(fixer) {
+                fix (fixer) {
                   return fixer.replaceText(
                     attr.name,
                     getCamelCasedString(propName, dash)
-                  );
+                  )
                 },
-              });
+              })
             }
           }
-        });
+        })
       },
-    };
+    }
   },
-};
+}
