@@ -70,9 +70,7 @@ module.exports = {
       }
       return newPropName;
     }
-
-    function reportError() {}
-
+    
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
