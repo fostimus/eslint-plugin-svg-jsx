@@ -1,6 +1,6 @@
 # eslint-plugin-react-camel-case
 
-Enforce camelCased props instead of dashed or underscored props.
+Enforce camelCased props instead of dashed props.
 
 ## Code examples
 
