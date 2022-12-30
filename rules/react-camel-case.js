@@ -25,7 +25,9 @@ module.exports = {
     function getPropName (propNode) {
       switch (propNode.type) {
         case "JSXSpreadAttribute":
-          return context.getSourceCode().getText(propNode.argument)
+          return getPropsFromSpreadObjectString(context
+            .getSourceCode()
+            .getText(propNode.argument))
         case "JSXIdentifier":
           return propNode.name
         case "JSXMemberExpression":
@@ -39,17 +41,44 @@ module.exports = {
       }
     }
 
+    function getPropsFromSpreadObjectString (spreadObjectString) {
+      const props = []
+      let currentProp = '';
+      let keyWithValue = false;
+      [...spreadObjectString].forEach((c) => {
+        console.log(c, currentProp)
+        if (c === ',') {
+          props.push(currentProp)
+          currentProp = ''
+          keyWithValue = false
+        } else if (c === '{' || c === '}' || c === ' ' || c === '\n' || keyWithValue) {
+          return
+        } else if (c === ':') {
+          keyWithValue = true
+        }
+
+        console.log('hey gurl **\n')
+        // this concat isn't working? 
+        currentProp += c
+        console.log(currentProp)
+      })
+
+      console.log(props)
+
+     return spreadObjectString
+    }
+
     function getJSXTagName (jsxNode) {
       switch (jsxNode.type) {
         case "JSXIdentifier":
-          return propNode.name
+          return jsxNode.name
         default:
           return jsxNode.name.name
       }
     }
 
     function isCustomHTMLElement (node) {
-      return getJSXTagName(node).includes("-")
+      return getJSXTagName(node)?.includes("-")
     }
 
     function getCamelCasedString (str, charDelimiter) {
@@ -72,7 +101,9 @@ module.exports = {
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
+          if (getJSXTagName(node) === "StyledButton") console.log(attr)
           const propName = getPropName(attr)
+          if (getJSXTagName(node) === "StyledButton") console.log(propName, typeof propName)
 
           const dash = "-"
           if (
@@ -95,10 +126,10 @@ module.exports = {
                   fixableCharacter: "dashes",
                 },
                 fix (fixer) {
-                  return fixer.replaceText(
+                  return fixer?.repalceText ? fixer.replaceText(
                     attr.name,
                     getCamelCasedString(propName, dash)
-                  )
+                  ) : null
                 },
               })
             }
