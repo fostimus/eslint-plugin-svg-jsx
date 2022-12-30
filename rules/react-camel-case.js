@@ -21,13 +21,15 @@ module.exports = {
   create (context) {
     const ALLOWED_PREFIXES = ["aria", "data"]
 
+    function isSpreadAttribute (node) {
+      return node.type === 'JSXSpreadAttribute'
+    }
+
     // from react/jsx-no-multi-spaces
     function getPropName (propNode) {
       switch (propNode.type) {
         case "JSXSpreadAttribute":
-          return getPropsFromSpreadObjectString(context
-            .getSourceCode()
-            .getText(propNode.argument))
+          return context.getSourceCode().getText(propNode.argument)
         case "JSXIdentifier":
           return propNode.name
         case "JSXMemberExpression":
@@ -43,29 +45,26 @@ module.exports = {
 
     function getPropsFromSpreadObjectString (spreadObjectString) {
       const props = []
-      let currentProp = '';
+      let currentProp = ''
       let keyWithValue = false;
       [...spreadObjectString].forEach((c) => {
-        console.log(c, currentProp)
         if (c === ',') {
-          props.push(currentProp)
           currentProp = ''
           keyWithValue = false
+          return
         } else if (c === '{' || c === '}' || c === ' ' || c === '\n' || keyWithValue) {
           return
         } else if (c === ':') {
           keyWithValue = true
+          return
         }
 
-        console.log('hey gurl **\n')
-        // this concat isn't working? 
         currentProp += c
-        console.log(currentProp)
       })
 
-      console.log(props)
+      // TODO: these props are returning empty rn, maybe forEach is async?
 
-     return spreadObjectString
+     return props
     }
 
     function getJSXTagName (jsxNode) {
@@ -97,13 +96,19 @@ module.exports = {
       }
       return newPropName
     }
+
+    
     
     return {
       JSXOpeningElement: (node) => {
-        node.attributes.forEach((attr) => {
-          if (getJSXTagName(node) === "StyledButton") console.log(attr)
+        function attributeHandler (attr) {
           const propName = getPropName(attr)
-          if (getJSXTagName(node) === "StyledButton") console.log(propName, typeof propName)
+
+          if (isSpreadAttribute(attr)) {
+            const props = getPropsFromSpreadObjectString(propName);
+            console.log(props)
+            props.forEach(attributeHandler)
+          }
 
           const dash = "-"
           if (
@@ -126,15 +131,19 @@ module.exports = {
                   fixableCharacter: "dashes",
                 },
                 fix (fixer) {
-                  return fixer?.repalceText ? fixer.replaceText(
-                    attr.name,
-                    getCamelCasedString(propName, dash)
-                  ) : null
+                  return fixer?.repalceText
+                    ? fixer.replaceText(
+                        attr.name,
+                        getCamelCasedString(propName, dash)
+                      )
+                    : null
                 },
               })
             }
           }
-        })
+        }
+
+        node.attributes.forEach(attributeHandler)
       },
     }
   },
