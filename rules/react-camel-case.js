@@ -25,15 +25,15 @@ module.exports = {
       return node.type === 'JSXSpreadAttribute'
     }
 
-    // from react/jsx-no-multi-spaces
-    function getPropName (propNode) {
+    // from source code for react/jsx-no-multi-spaces, getPropName
+    function getPropContent (propNode) {
       switch (propNode.type) {
         case "JSXSpreadAttribute":
           return context.getSourceCode().getText(propNode.argument)
         case "JSXIdentifier":
           return propNode.name
         case "JSXMemberExpression":
-          return `${getPropName(propNode.object)}.${propNode.property.name}`
+          return `${getPropContent(propNode.object)}.${propNode.property.name}`
         default:
           return propNode.name
             ? propNode.name.name
@@ -44,17 +44,31 @@ module.exports = {
     }
 
     function getPropsFromSpreadObjectString (spreadObjectString) {
+      
+      // at the moment, normalizing only consists of removing single quotes
+      // on object keys as react props
+      function normalizePropName (propName) {
+        return propName.replaceAll("'", "")
+      }
+
       const props = []
-      let currentProp = ''
+      let currentProp = ""
       let keyWithValue = false;
       [...spreadObjectString].forEach((c) => {
-        if (c === ',') {
-          currentProp = ''
+        if (c === ",") {
+          props.push(normalizePropName(currentProp))
+          currentProp = ""
           keyWithValue = false
           return
-        } else if (c === '{' || c === '}' || c === ' ' || c === '\n' || keyWithValue) {
+        } else if (
+          c === "{" ||
+          c === "}" ||
+          c === " " ||
+          c === "\n" ||
+          keyWithValue
+        ) {
           return
-        } else if (c === ':') {
+        } else if (c === ":") {
           keyWithValue = true
           return
         }
@@ -62,9 +76,15 @@ module.exports = {
         currentProp += c
       })
 
-      // TODO: these props are returning empty rn, maybe forEach is async?
+      return props
+    }
 
-     return props
+    function getPropName (attr) {
+      if (typeof attr === 'string') {
+        return  attr
+      } else {
+        return getPropContent(attr)
+      }
     }
 
     function getJSXTagName (jsxNode) {
@@ -102,14 +122,13 @@ module.exports = {
     return {
       JSXOpeningElement: (node) => {
         function attributeHandler (attr) {
-          const propName = getPropName(attr)
-
           if (isSpreadAttribute(attr)) {
-            const props = getPropsFromSpreadObjectString(propName);
-            console.log(props)
+            const props = getPropsFromSpreadObjectString(getPropContent(attr))
             props.forEach(attributeHandler)
-          }
+            return
+          } 
 
+          const propName = getPropName(attr)
           const dash = "-"
           if (
             propName.includes(dash) &&
