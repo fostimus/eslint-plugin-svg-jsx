@@ -22,7 +22,7 @@ module.exports = {
     const ALLOWED_PREFIXES = ["aria", "data"]
 
     function isSpreadAttribute (node) {
-      return node.type === 'JSXSpreadAttribute'
+      return node.type === "JSXSpreadAttribute"
     }
 
     // from source code for react/jsx-no-multi-spaces, getPropName
@@ -44,10 +44,7 @@ module.exports = {
     }
 
     function getPropsFromSpreadObjectString (spreadObjectString) {
-      
-      // at the moment, normalizing only consists of removing single quotes
-      // on object keys as react props
-      function normalizePropName (propName) {
+      function normalizeProp (propName) {
         return propName.replaceAll("'", "")
       }
 
@@ -56,7 +53,7 @@ module.exports = {
       let keyWithValue = false;
       [...spreadObjectString].forEach((c) => {
         if (c === ",") {
-          props.push(normalizePropName(currentProp))
+          props.push(normalizeProp(currentProp))
           currentProp = ""
           keyWithValue = false
           return
@@ -80,8 +77,8 @@ module.exports = {
     }
 
     function getPropName (attr) {
-      if (typeof attr === 'string') {
-        return  attr
+      if (typeof attr === "string") {
+        return attr
       } else {
         return getPropContent(attr)
       }
@@ -117,49 +114,56 @@ module.exports = {
       return newPropName
     }
 
-    
-    
     return {
       JSXOpeningElement: (node) => {
-        function attributeHandler (attr) {
-          if (isSpreadAttribute(attr)) {
-            const props = getPropsFromSpreadObjectString(getPropContent(attr))
-            props.forEach(attributeHandler)
-            return
-          } 
+        function fixableError (propName, fixableNode, charDelimiter) {
+          context.report({
+            node,
+            messageId: "fixableProp",
+            data: {
+              propName,
+              tagName: getJSXTagName(node),
+              fixableCharacter: "dashes",
+            },
+            fix (fixer) {
+              // console.log(fixableNode.argument.properties)
+              return fixer?.replaceText
+                ? fixer.replaceText(
+                    fixableNode,
+                    getCamelCasedString(propName, charDelimiter)
+                  )
+                : null
+            },
+          })
+        }
 
-          const propName = getPropName(attr)
-          const dash = "-"
+        function performErrorChecking (propName, fixableNode, charDelimiter) {
           if (
-            propName.includes(dash) &&
+            propName.includes(charDelimiter) &&
             !isCustomHTMLElement(node) &&
             !ALLOWED_PREFIXES.some((prefix) => propName.startsWith(prefix))
           ) {
-            if (propName.charAt(propName.length - 1) === dash) {
+            if (propName.charAt(propName.length - 1) === charDelimiter) {
               context.report({
                 node,
                 messageId: "invalidProp",
               })
             } else {
-              context.report({
-                node,
-                messageId: "fixableProp",
-                data: {
-                  propName,
-                  tagName: getJSXTagName(node),
-                  fixableCharacter: "dashes",
-                },
-                fix (fixer) {
-                  return fixer?.repalceText
-                    ? fixer.replaceText(
-                        attr.name,
-                        getCamelCasedString(propName, dash)
-                      )
-                    : null
-                },
-              })
+              fixableError(propName, fixableNode, charDelimiter)
             }
           }
+        }
+
+        function attributeHandler (attr) {
+          if (isSpreadAttribute(attr)) {
+            const props = getPropsFromSpreadObjectString(getPropContent(attr))
+            props.forEach((prop) => performErrorChecking(prop, attr, "-"))
+            return
+          }
+
+          const propName = getPropName(attr)
+          const dash = "-"
+          performErrorChecking(propName, attr.name, dash)
         }
 
         node.attributes.forEach(attributeHandler)
