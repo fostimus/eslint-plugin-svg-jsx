@@ -1,7 +1,8 @@
 /**
  * @fileoverview Rule to flag use of non camelCased props in React .js files
- * @author Derek Foster
  */
+
+const { getPropsFromObjectString, getCamelCasedString } = require("../helpers")
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -21,66 +22,58 @@ module.exports = {
   create (context) {
     const ALLOWED_PREFIXES = ["aria", "data"]
 
-    // from react/jsx-no-multi-spaces
-    function getPropName (propNode) {
-      switch (propNode.type) {
+    function isSpreadAttribute (node) {
+      return node.type === "JSXSpreadAttribute"
+    }
+
+    // from source code for react/jsx-no-multi-spaces, getPropName
+    function getPropContent (node) {
+      switch (node.type) {
         case "JSXSpreadAttribute":
-          return context.getSourceCode().getText(propNode.argument)
+          return context.getSourceCode().getText(node.argument)
         case "JSXIdentifier":
-          return propNode.name
+          return node.name
         case "JSXMemberExpression":
-          return `${getPropName(propNode.object)}.${propNode.property.name}`
+          return `${getPropContent(node.object)}.${node.property.name}`
         default:
-          return propNode.name
-            ? propNode.name.name
-            : `${context.getSourceCode().getText(propNode.object)}.${
-                propNode.property.name
+          return node.name
+            ? node.name.name
+            : `${context.getSourceCode().getText(node.object)}.${
+                node.property.name
               }` // needed for typescript-eslint parser
+      }
+    }
+
+    function getPropName (attr) {
+      if (typeof attr === "string") {
+        return attr
+      } else {
+        return getPropContent(attr)
       }
     }
 
     function getJSXTagName (jsxNode) {
       switch (jsxNode.type) {
         case "JSXIdentifier":
-          return propNode.name
+          return jsxNode.name
         default:
           return jsxNode.name.name
       }
     }
 
     function isCustomHTMLElement (node) {
-      return getJSXTagName(node).includes("-")
+      return getJSXTagName(node)?.includes("-")
     }
 
-    function getCamelCasedString (str, charDelimiter) {
-      let newPropName = str
-      while (newPropName.includes(charDelimiter)) {
-        const indexOfDash = newPropName.indexOf(charDelimiter)
-        const charAfterDash = newPropName.charAt(indexOfDash + 1)
-
-        newPropName = `${newPropName.substring(
-          0,
-          indexOfDash
-        )}${charAfterDash.toUpperCase()}${newPropName.substring(
-          indexOfDash + 2,
-          newPropName.length
-        )}`
-      }
-      return newPropName
-    }
-    
     return {
       JSXOpeningElement: (node) => {
-        node.attributes.forEach((attr) => {
-          const propName = getPropName(attr)
-
-          const dash = "-"
+        function validateAndFixProp (propName, fixableNode, charDelimiter) {
           if (
-            propName.includes(dash) &&
+            propName.includes(charDelimiter) &&
             !isCustomHTMLElement(node) &&
             !ALLOWED_PREFIXES.some((prefix) => propName.startsWith(prefix))
           ) {
-            if (propName.charAt(propName.length - 1) === dash) {
+            if (propName.charAt(propName.length - 1) === charDelimiter) {
               context.report({
                 node,
                 messageId: "invalidProp",
@@ -95,15 +88,46 @@ module.exports = {
                   fixableCharacter: "dashes",
                 },
                 fix (fixer) {
-                  return fixer.replaceText(
-                    attr.name,
-                    getCamelCasedString(propName, dash)
-                  )
+                  return fixer?.replaceText
+                    ? fixer.replaceText(
+                        fixableNode,
+                        getCamelCasedString(propName, charDelimiter)
+                      )
+                    : null
                 },
               })
             }
           }
-        })
+        }
+
+        function handleSpreadOperator (attr, charDelimtiter) {
+          const props = getPropsFromObjectString(getPropContent(attr))
+          props.forEach((prop) => {
+            const nodeToFix = attr?.argument?.properties?.find((node) => {
+              return node?.key?.value === prop
+            })?.key
+
+            validateAndFixProp(prop, nodeToFix, charDelimtiter)
+          })
+        }
+
+        function handleCommonProps (attr, charDelimiter) {
+          validateAndFixProp(getPropName(attr), attr.name, charDelimiter)
+        }
+
+        function attributeHandler (attr) {
+          // opportunity to extend this to a list, for things like colons
+          const dash = "-"
+
+          // add other cases here
+          if (isSpreadAttribute(attr)) {
+            handleSpreadOperator(attr, dash)
+          } else {
+            handleCommonProps(attr, dash)
+          }
+        }
+
+        node.attributes.forEach(attributeHandler)
       },
     }
   },
