@@ -43,6 +43,8 @@ module.exports = {
       }
     }
 
+    // TODO: there should be validation that the spreadObjectString is actually an object.
+    // check beginning and end chars to validate?
     function getPropsFromSpreadObjectString (spreadObjectString) {
       function normalizeProp (propName) {
         return propName.replaceAll("'", "")
@@ -126,7 +128,6 @@ module.exports = {
               fixableCharacter: "dashes",
             },
             fix (fixer) {
-              // console.log(fixableNode.argument.properties)
               return fixer?.replaceText
                 ? fixer.replaceText(
                     fixableNode,
@@ -155,14 +156,21 @@ module.exports = {
         }
 
         function attributeHandler (attr) {
+          const dash = "-"
+
           if (isSpreadAttribute(attr)) {
             const props = getPropsFromSpreadObjectString(getPropContent(attr))
-            props.forEach((prop) => performErrorChecking(prop, attr, "-"))
+            props.forEach((prop) => {
+              const nodeToFix = attr.argument.properties?.find((node) => {
+                return node?.key?.value === prop
+              })?.key
+
+              performErrorChecking(prop, nodeToFix, dash)
+            })
             return
           }
 
           const propName = getPropName(attr)
-          const dash = "-"
           performErrorChecking(propName, attr.name, dash)
         }
 
