@@ -1,7 +1,8 @@
 /**
  * @fileoverview Rule to flag use of non camelCased props in React .js files
- * @author Derek Foster
  */
+
+const { getPropsFromObjectString, getCamelCasedString } = require("../helpers")
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -26,56 +27,21 @@ module.exports = {
     }
 
     // from source code for react/jsx-no-multi-spaces, getPropName
-    function getPropContent (propNode) {
-      switch (propNode.type) {
+    function getPropContent (node) {
+      switch (node.type) {
         case "JSXSpreadAttribute":
-          return context.getSourceCode().getText(propNode.argument)
+          return context.getSourceCode().getText(node.argument)
         case "JSXIdentifier":
-          return propNode.name
+          return node.name
         case "JSXMemberExpression":
-          return `${getPropContent(propNode.object)}.${propNode.property.name}`
+          return `${getPropContent(node.object)}.${node.property.name}`
         default:
-          return propNode.name
-            ? propNode.name.name
-            : `${context.getSourceCode().getText(propNode.object)}.${
-                propNode.property.name
+          return node.name
+            ? node.name.name
+            : `${context.getSourceCode().getText(node.object)}.${
+                node.property.name
               }` // needed for typescript-eslint parser
       }
-    }
-
-    // TODO: there should be validation that the spreadObjectString is actually an object.
-    // check beginning and end chars to validate?
-    function getPropsFromSpreadObjectString (spreadObjectString) {
-      function normalizeProp (propName) {
-        return propName.replaceAll("'", "")
-      }
-
-      const props = []
-      let currentProp = ""
-      let keyWithValue = false;
-      [...spreadObjectString].forEach((c) => {
-        if (c === ",") {
-          props.push(normalizeProp(currentProp))
-          currentProp = ""
-          keyWithValue = false
-          return
-        } else if (
-          c === "{" ||
-          c === "}" ||
-          c === " " ||
-          c === "\n" ||
-          keyWithValue
-        ) {
-          return
-        } else if (c === ":") {
-          keyWithValue = true
-          return
-        }
-
-        currentProp += c
-      })
-
-      return props
     }
 
     function getPropName (attr) {
@@ -99,46 +65,9 @@ module.exports = {
       return getJSXTagName(node)?.includes("-")
     }
 
-    function getCamelCasedString (str, charDelimiter) {
-      let newPropName = str
-      while (newPropName.includes(charDelimiter)) {
-        const indexOfDash = newPropName.indexOf(charDelimiter)
-        const charAfterDash = newPropName.charAt(indexOfDash + 1)
-
-        newPropName = `${newPropName.substring(
-          0,
-          indexOfDash
-        )}${charAfterDash.toUpperCase()}${newPropName.substring(
-          indexOfDash + 2,
-          newPropName.length
-        )}`
-      }
-      return newPropName
-    }
-
     return {
       JSXOpeningElement: (node) => {
-        function fixableError (propName, fixableNode, charDelimiter) {
-          context.report({
-            node,
-            messageId: "fixableProp",
-            data: {
-              propName,
-              tagName: getJSXTagName(node),
-              fixableCharacter: "dashes",
-            },
-            fix (fixer) {
-              return fixer?.replaceText
-                ? fixer.replaceText(
-                    fixableNode,
-                    getCamelCasedString(propName, charDelimiter)
-                  )
-                : null
-            },
-          })
-        }
-
-        function performErrorChecking (propName, fixableNode, charDelimiter) {
+        function validateAndFixProp (propName, fixableNode, charDelimiter) {
           if (
             propName.includes(charDelimiter) &&
             !isCustomHTMLElement(node) &&
@@ -150,28 +79,52 @@ module.exports = {
                 messageId: "invalidProp",
               })
             } else {
-              fixableError(propName, fixableNode, charDelimiter)
+              context.report({
+                node,
+                messageId: "fixableProp",
+                data: {
+                  propName,
+                  tagName: getJSXTagName(node),
+                  fixableCharacter: "dashes",
+                },
+                fix (fixer) {
+                  return fixer?.replaceText
+                    ? fixer.replaceText(
+                        fixableNode,
+                        getCamelCasedString(propName, charDelimiter)
+                      )
+                    : null
+                },
+              })
             }
           }
         }
 
+        function handleSpreadOperator (attr, charDelimtiter) {
+          const props = getPropsFromObjectString(getPropContent(attr))
+          props.forEach((prop) => {
+            const nodeToFix = attr?.argument?.properties?.find((node) => {
+              return node?.key?.value === prop
+            })?.key
+
+            validateAndFixProp(prop, nodeToFix, charDelimtiter)
+          })
+        }
+
+        function handleCommonProps (attr, charDelimiter) {
+          validateAndFixProp(getPropName(attr), attr.name, charDelimiter)
+        }
+
         function attributeHandler (attr) {
+          // opportunity to extend this to a list, for things like colons
           const dash = "-"
 
+          // add other cases here
           if (isSpreadAttribute(attr)) {
-            const props = getPropsFromSpreadObjectString(getPropContent(attr))
-            props.forEach((prop) => {
-              const nodeToFix = attr.argument.properties?.find((node) => {
-                return node?.key?.value === prop
-              })?.key
-
-              performErrorChecking(prop, nodeToFix, dash)
-            })
-            return
+            handleSpreadOperator(attr, dash)
+          } else {
+            handleCommonProps(attr, dash)
           }
-
-          const propName = getPropName(attr)
-          performErrorChecking(propName, attr.name, dash)
         }
 
         node.attributes.forEach(attributeHandler)
