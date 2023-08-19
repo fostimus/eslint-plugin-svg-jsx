@@ -4,12 +4,39 @@ Enforce camelCased props instead of dashed props.
 
 ## Code examples
 
+Case #1: Dashes in props. 
+
 ```js
+// invalid
+<MyComponent margin-left={30} />
+
 // valid
 <MyComponent marginLeft={30} />
 
+```
+
+Case #2: Colons in props. 
+
+```js
 // invalid
-<MyComponent margin-left={30} />
+<svg
+    width="546"
+    height="382"
+    viewBox="0 0 546 382"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+/>
+
+// valid
+<svg
+    width="546"
+    height="382"
+    viewBox="0 0 546 382"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+/>
 ```
 
 ## Contributing

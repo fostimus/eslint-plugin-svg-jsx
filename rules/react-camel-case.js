@@ -45,7 +45,7 @@ module.exports = {
         case "JSXMemberExpression":
           return `${getPropContent(node.object)}.${node.property.name}`
         case "JSXAttribute":
-          if (node?.name?.namespace?.name === "xmlns" && node?.name?.name?.name === "xlink") {
+          if (node?.name?.namespace?.name && node?.name?.name?.name) {
             return `${node?.name?.namespace?.name}:${node?.name?.name?.name}`
           }      
           else {
