@@ -39,6 +39,32 @@ Case #2: Colons in props.
 />
 ```
 
+Case #3: string style attributes: NOT YET IMPLEMENTED
+```js
+// invalid
+<mask
+    style="mask-type:alpha"
+    maskUnits="userSpaceOnUse"
+    x="408"
+    y="144"
+    width="90"
+    height="194"
+/>
+
+// valid
+<mask
+    style={{ maskType: 'alpha' }}
+    maskUnits="userSpaceOnUse"
+    x="408"
+    y="144"
+    width="90"
+    height="194"
+/>
+
+
+```
+
+
 ## Contributing
 
 Pull requests are welcome. Please checkout the [open issues](https://github.com/fostimus/eslint-plugin-react-camel-case/issues) we have if you'd like to help out. Bugfixes and related features are also welcome.
