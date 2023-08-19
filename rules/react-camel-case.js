@@ -28,6 +28,15 @@ module.exports = {
 
     // from source code for react/jsx-no-multi-spaces, getPropName
     function getPropContent (node) {
+      const defaultCase = (node) =>{
+        return node.name
+          ? node.name.name
+          : `${context.getSourceCode().getText(node.object)}.${
+              node.property.name
+            }` // needed for typescript-eslint parser
+      }
+
+
       switch (node.type) {
         case "JSXSpreadAttribute":
           return context.getSourceCode().getText(node.argument)
@@ -36,21 +45,15 @@ module.exports = {
         case "JSXMemberExpression":
           return `${getPropContent(node.object)}.${node.property.name}`
         case "JSXAttribute":
-            if (node?.name?.namespace?.name === "xmlns" && node?.name?.name?.name === "xlink") {
-              console.log(node)
-            }        
-            // case "JSXNamespacedName":  JSXNamespacedName is in the node.name field under JSXAttribute
-          // console.log(node?.name?.namespace?.name, node?.name?.name?.name)
-          return node.name
+          if (node?.name?.namespace?.name === "xmlns" && node?.name?.name?.name === "xlink") {
+            return `${node?.name?.namespace?.name}:${node?.name?.name?.name}`
+          }      
+          else {
+            return defaultCase(node)
+          }  
         default:
+          return defaultCase(node)
           
-          // the below is what we want, but how to catch in ^ JSXNamespacedName?
-          // console.log(node?.name?.namespace?.name, node?.name?.name?.name)
-          return node.name
-            ? node.name.name
-            : `${context.getSourceCode().getText(node.object)}.${
-                node.property.name
-              }` // needed for typescript-eslint parser
       }
     }
 
@@ -78,7 +81,6 @@ module.exports = {
     return {
       JSXOpeningElement: (node) => {
         function validateAndFixProp (propName, fixableNode, charDelimiter) {
-          // console.log(propName)
           if (
             propName?.includes &&
             propName.includes(charDelimiter) &&
@@ -97,7 +99,7 @@ module.exports = {
                 data: {
                   propName,
                   tagName: getJSXTagName(node),
-                  fixableCharacter: "dashes",
+                  fixableCharacter: charDelimiter,
                 },
                 fix (fixer) {
                   return fixer?.replaceText
@@ -128,14 +130,17 @@ module.exports = {
         }
 
         function attributeHandler (attr) {
-          // opportunity to extend this to a list, for things like colons
-          const dash = "-"
+          const invalidCharacters = ["-", ":"]
 
           // add other cases here
           if (isSpreadAttribute(attr)) {
-            handleSpreadOperator(attr, dash)
+            invalidCharacters.forEach((char) =>
+              handleSpreadOperator(attr, char)
+            )
           } else {
-            handleCommonProps(attr, dash)
+            invalidCharacters.forEach((char) =>
+              handleCommonProps(attr, char)
+            )
           }
         }
 
