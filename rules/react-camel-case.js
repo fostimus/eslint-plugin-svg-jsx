@@ -69,11 +69,12 @@ module.exports = {
       JSXOpeningElement: (node) => {
         function validateAndFixProp (propName, fixableNode, charDelimiter) {
           if (
+            propName?.includes &&
             propName.includes(charDelimiter) &&
             !isCustomHTMLElement(node) &&
-            !ALLOWED_PREFIXES.some((prefix) => propName.startsWith(prefix))
+            !ALLOWED_PREFIXES.some((prefix) => propName?.startsWith(prefix))
           ) {
-            if (propName.charAt(propName.length - 1) === charDelimiter) {
+            if (propName?.charAt(propName?.length - 1) === charDelimiter) {
               context.report({
                 node,
                 messageId: "invalidProp",
