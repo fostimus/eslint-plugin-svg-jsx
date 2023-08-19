@@ -39,7 +39,7 @@ Case #2: Colons in props.
 />
 ```
 
-Case #3: string style attributes: NOT YET IMPLEMENTED
+Case #3: string style attributes
 ```js
 // invalid
 <mask

@@ -2,7 +2,7 @@
  * @fileoverview Rule to flag use of non camelCased props in React .js files
  */
 
-const { getPropsFromObjectString, getCamelCasedString } = require("../helpers")
+const { getPropsFromObjectString, getCamelCasedString, convertStringStyleValue } = require("../helpers")
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -16,6 +16,8 @@ module.exports = {
         "JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.",
       invalidProp:
         "JSX prop is invalid; the last character of the prop is not allowed. Not fixable.",
+      stringStyleValue:
+        "JSX prop is invalid; the value of the style prop is a string. Fixable.",
     },
     fixable: "code",
   },
@@ -27,7 +29,7 @@ module.exports = {
     }
 
     // from source code for react/jsx-no-multi-spaces, getPropName
-    function getPropContent (node) {
+    function getPropIdentifier (node) {
       const defaultCase = (node) =>{
         return node.name
           ? node.name.name
@@ -36,18 +38,19 @@ module.exports = {
             }` // needed for typescript-eslint parser
       }
 
-
       switch (node.type) {
         case "JSXSpreadAttribute":
           return context.getSourceCode().getText(node.argument)
         case "JSXIdentifier":
           return node.name
         case "JSXMemberExpression":
-          return `${getPropContent(node.object)}.${node.property.name}`
+          return `${getPropIdentifier(node.object)}.${node.property.name}`
         case "JSXAttribute":
           if (node?.name?.namespace?.name && node?.name?.name?.name) {
             return `${node?.name?.namespace?.name}:${node?.name?.name?.name}`
-          }      
+          }  else if (node?.name?.name === 'style')   {
+            return defaultCase(node)
+          }   
           else {
             return defaultCase(node)
           }  
@@ -61,7 +64,7 @@ module.exports = {
       if (typeof attr === "string") {
         return attr
       } else {
-        return getPropContent(attr)
+        return getPropIdentifier(attr)
       }
     }
 
@@ -114,8 +117,31 @@ module.exports = {
           }
         }
 
+        function validateAndFixPropContent (propName, fixableNode) {
+          if (
+            propName === "style" && 
+            typeof fixableNode.value === 'string'
+          ) {
+            context.report({
+              node,
+              messageId: "stringStyleValue",
+              data: {
+                propName,
+              },
+              fix(fixer) {
+                return fixer?.replaceText
+                  ? fixer.replaceText(
+                      fixableNode,
+                      `{${convertStringStyleValue(fixableNode.value)}}`
+                    )
+                  : null
+              },
+            })
+          }
+        }
+
         function handleSpreadOperator (attr, charDelimtiter) {
-          const props = getPropsFromObjectString(getPropContent(attr))
+          const props = getPropsFromObjectString(getPropIdentifier(attr))
           props.forEach((prop) => {
             const nodeToFix = attr?.argument?.properties?.find((node) => {
               return node?.key?.value === prop
@@ -126,7 +152,9 @@ module.exports = {
         }
 
         function handleCommonProps (attr, charDelimiter) {
-          validateAndFixProp(getPropName(attr), attr.name, charDelimiter)
+          const propName = getPropName(attr)
+          validateAndFixProp(propName, attr.name, charDelimiter)
+          validateAndFixPropContent(propName, attr.value)
         }
 
         function attributeHandler (attr) {
