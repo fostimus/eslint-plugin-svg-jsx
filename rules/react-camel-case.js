@@ -35,7 +35,17 @@ module.exports = {
           return node.name
         case "JSXMemberExpression":
           return `${getPropContent(node.object)}.${node.property.name}`
+        case "JSXAttribute":
+            if (node?.name?.namespace?.name === "xmlns" && node?.name?.name?.name === "xlink") {
+              console.log(node)
+            }        
+            // case "JSXNamespacedName":  JSXNamespacedName is in the node.name field under JSXAttribute
+          // console.log(node?.name?.namespace?.name, node?.name?.name?.name)
+          return node.name
         default:
+          
+          // the below is what we want, but how to catch in ^ JSXNamespacedName?
+          // console.log(node?.name?.namespace?.name, node?.name?.name?.name)
           return node.name
             ? node.name.name
             : `${context.getSourceCode().getText(node.object)}.${
@@ -68,6 +78,7 @@ module.exports = {
     return {
       JSXOpeningElement: (node) => {
         function validateAndFixProp (propName, fixableNode, charDelimiter) {
+          // console.log(propName)
           if (
             propName?.includes &&
             propName.includes(charDelimiter) &&
