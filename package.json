@@ -1,6 +1,6 @@
 {
-  "name": "eslint-plugin-react-camel-case",
-  "version": "1.1.2",
+  "name": "eslint-plugin-svg-jsx",
+  "version": "1.0.0",
   "description": "ESLint rules for camelCasing React props",
   "keywords": [
     "eslint",
@@ -33,10 +33,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:fostimus/eslint-plugin-react-camel-case.git"
+    "url": "git@github.com:fostimus/eslint-plugin-svg-jsx.git"
   },
   "bugs": {
-    "url": "https://github.com/fostimus/eslint-plugin-react-camel-case/issues"
+    "url": "https://github.com/fostimus/eslint-plugin-svg-jsx/issues"
   },
-  "homepage": "https://github.com/fostimus/eslint-plugin-react-camel-case"
+  "homepage": "https://github.com/fostimus/eslint-plugin-svg-jsx"
 }
