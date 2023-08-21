@@ -68,3 +68,5 @@ Case #3: string style attributes
 ## Contributing
 
 Pull requests are welcome. Please checkout the [open issues](https://github.com/fostimus/eslint-plugin-react-camel-case/issues) we have if you'd like to help out. Bugfixes and related features are also welcome.
+
+I'd like to split out the 3 cases into their own separate eslint rules, as is convention with eslint plugins. As of now, the rule `react-camel-case` will hit all 3 cases, which is what I would like in my projects, but not necessarily what other consumers would like.
