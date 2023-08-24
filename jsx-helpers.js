@@ -1,9 +1,9 @@
-export function isSpreadAttribute(node) {
+function isSpreadAttribute(node) {
   return node.type === 'JSXSpreadAttribute'
 }
 
 // from source code for react/jsx-no-multi-spaces, getPropName
-export function getPropIdentifier(node, context) {
+function getPropIdentifier(node, context) {
   const defaultCase = (node) => {
     return node.name
       ? node.name.name
@@ -30,7 +30,7 @@ export function getPropIdentifier(node, context) {
   }
 }
 
-export function getPropName(attr, context) {
+function getPropName(attr, context) {
   if (typeof attr === 'string') {
     return attr
   } else {
@@ -38,7 +38,7 @@ export function getPropName(attr, context) {
   }
 }
 
-export function getJSXTagName(jsxNode) {
+function getJSXTagName(jsxNode) {
   switch (jsxNode.type) {
     case 'JSXIdentifier':
       return jsxNode.name
@@ -47,6 +47,15 @@ export function getJSXTagName(jsxNode) {
   }
 }
 
-export function isCustomHTMLElement(node) {
+function isCustomHTMLElement(node) {
   return getJSXTagName(node)?.includes('-')
+}
+
+
+module.exports = {
+  isCustomHTMLElement,
+  getJSXTagName,
+  getPropName,
+  getPropIdentifier,
+  isSpreadAttribute,
 }

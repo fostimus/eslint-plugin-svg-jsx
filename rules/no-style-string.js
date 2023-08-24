@@ -22,7 +22,7 @@ module.exports = {
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
-          const propName = getPropName(attr)
+          const propName = getPropName(attr, context)
           const fixableNode = attr.value
           if (propName === 'style' && typeof fixableNode.value === 'string') {
             context.report({

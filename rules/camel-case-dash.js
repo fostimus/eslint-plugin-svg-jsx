@@ -27,8 +27,6 @@ module.exports = {
         'JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.',
       invalidProp:
         'JSX prop is invalid; the last character of the prop is not allowed. Not fixable.',
-      stringStyleValue:
-        'JSX prop is invalid; the value of the style prop is a string. Fixable.',
     },
     fixable: 'code',
   },
@@ -103,13 +101,13 @@ module.exports = {
         }
 
         function handleCommonProps(attr, charDelimiter) {
-          const propName = getPropName(attr)
+          const propName = getPropName(attr, context)
           validateAndFixProp(propName, attr.name, charDelimiter)
           validateAndFixPropContent(propName, attr.value)
         }
 
         function attributeHandler(attr) {
-          const invalidCharacters = ['-', ':']
+          const invalidCharacters = ['-']
 
           // add other cases here
           if (isSpreadAttribute(attr)) {
