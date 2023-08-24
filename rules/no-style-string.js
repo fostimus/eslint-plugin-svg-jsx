@@ -2,7 +2,7 @@
  * @fileoverview Rule to flag use of non camelCased props in React .js files
  */
 
-const { getPropName } = require('../jsx-helpers')
+const { getPropName } = require('../helpers/jsx')
 const { convertStringStyleValue } = require('../helpers')
 
 // ------------------------------------------------------------------------------
