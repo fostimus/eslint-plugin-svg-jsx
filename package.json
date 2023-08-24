@@ -16,7 +16,7 @@
   "main": "index.js",
   "files": [
     "index.js",
-    "helpers.js",
+    "helpers/",
     "rules/"
   ],
   "devDependencies": {

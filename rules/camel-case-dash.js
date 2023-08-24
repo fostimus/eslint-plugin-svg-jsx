@@ -8,7 +8,7 @@ const {
   getJSXTagName,
   getPropIdentifier,
   isSpreadAttribute,
-} = require('../jsx-helpers')
+} = require('../helpers/jsx')
 const {
   getPropsFromObjectString,
   getCamelCasedString,
