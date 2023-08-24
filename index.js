@@ -2,6 +2,7 @@
 
 module.exports = {
   rules: {
-    'react-camel-case': require('./rules/react-camel-case'),
+    'camel-case': require('./rules/camel-case'),
+    'no-style-string': require('./rules/no-style-string'),
   },
 }
