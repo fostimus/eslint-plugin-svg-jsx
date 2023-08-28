@@ -71,26 +71,6 @@ module.exports = {
           }
         }
 
-        function validateAndFixPropContent(propName, fixableNode) {
-          if (propName === 'style' && typeof fixableNode.value === 'string') {
-            context.report({
-              node,
-              messageId: 'stringStyleValue',
-              data: {
-                propName,
-              },
-              fix(fixer) {
-                return fixer?.replaceText
-                  ? fixer.replaceText(
-                      fixableNode,
-                      `{${convertStringStyleValue(fixableNode.value)}}`
-                    )
-                  : null
-              },
-            })
-          }
-        }
-
         function handleSpreadOperator(attr, charDelimtiter) {
           const props = getPropsFromObjectString(getPropIdentifier(attr, context))
           props.forEach((prop) => {
@@ -105,7 +85,6 @@ module.exports = {
         function handleCommonProps(attr, charDelimiter) {
           const propName = getPropName(attr, context)
           validateAndFixProp(propName, attr.name, charDelimiter)
-          validateAndFixPropContent(propName, attr.value)
         }
 
         function attributeHandler(attr) {
