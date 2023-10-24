@@ -2,6 +2,33 @@
 
 Enforce camelCased props instead of dashed props.
 
+## Add to your project
+
+1. Add the dependency: `yarn add -D eslint-plugin-svg-jsx` or `npm install --save-dev eslint-plugin-svg-jsx`
+2. In your .eslintrc.js:
+    1. Add `svg-jsx` to your plugins
+    2. Add the `svg-jsx` rules:
+    ```
+    'svg-jsx/camel-case-dash': 'error',
+    'svg-jsx/camel-case-colon': 'error',
+    'svg-jsx/no-style-string': 'error',
+    ```
+
+Final .eslintrc.js should look something like:
+
+```js
+module.exports = {
+  parser: "@babel/eslint-parser",
+  extends: ["standard", "standard-jsx", "plugin:prettier/recommended"],
+  plugins: ["no-only-tests", "prettier", "svg-jsx"],
+  rules: {
+    "svg-jsx/camel-case-dash": "error",
+    "svg-jsx/camel-case-colon": "error",
+    "svg-jsx/no-style-string": "error",
+  },
+}
+```
+
 ## Code examples
 
 Case #1: Dashes in props. 
