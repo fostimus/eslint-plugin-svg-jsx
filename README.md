@@ -1,6 +1,8 @@
 # eslint-plugin-svg-jsx
 
-Enforce camelCased props instead of dashed props.
+Enforce camelCased props instead of dashed props. 
+
+NPM package: https://www.npmjs.com/package/eslint-plugin-svg-jsx
 
 ## Add to your project
 
