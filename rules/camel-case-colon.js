@@ -78,7 +78,9 @@ module.exports = {
               return node?.key?.value === prop
             })?.key
 
-            validateAndFixProp(prop, nodeToFix, charDelimtiter)
+            if (nodeToFix) {
+              validateAndFixProp(prop, nodeToFix, charDelimtiter)
+            }
           })
         }
 
