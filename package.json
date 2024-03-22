@@ -19,6 +19,12 @@
     "helpers/",
     "rules/"
   ],
+  "scripts": {
+    "lint": "eslint 'rules/**/*.js' 'helpers/**/*.js'",
+    "lint:fix": "yarn lint --fix",
+    "lint:quiet": "NODE_ENV=test yarn lint --quiet",
+    "lint:quiet:fix": "yarn lint:quiet --fix"
+  },
   "devDependencies": {
     "@babel/core": "^7.22.11",
     "@babel/eslint-parser": "^7.22.11",

@@ -4,16 +4,10 @@
 
 const {
   getPropName,
-  isCustomHTMLElement,
-  getJSXTagName,
   getPropIdentifier,
   isSpreadAttribute,
 } = require('../helpers/jsx')
-const {
-  getPropsFromObjectString,
-  getCamelCasedString,
-  convertStringStyleValue,
-} = require('../helpers')
+const { getPropsFromObjectString, getValidatePropFn } = require('../helpers')
 
 // ------------------------------------------------------------------------------
 // Rule Definition
@@ -32,47 +26,21 @@ module.exports = {
     },
     fixable: 'code',
   },
-  create(context) {
+  create (context) {
     const ALLOWED_PREFIXES = ['aria', 'data']
 
     return {
       JSXOpeningElement: (node) => {
-        function validateAndFixProp(propName, fixableNode, charDelimiter) {
-          if (
-            propName?.includes &&
-            propName.includes(charDelimiter) &&
-            !isCustomHTMLElement(node) &&
-            !ALLOWED_PREFIXES.some((prefix) => propName?.startsWith(prefix))
-          ) {
-            if (propName?.charAt(propName?.length - 1) === charDelimiter) {
-              context.report({
-                node,
-                messageId: 'invalidProp',
-              })
-            } else {
-              context.report({
-                node,
-                messageId: 'fixableProp',
-                data: {
-                  propName,
-                  tagName: getJSXTagName(node),
-                  fixableCharacter: charDelimiter,
-                },
-                fix(fixer) {
-                  return fixer?.replaceText
-                    ? fixer.replaceText(
-                        fixableNode,
-                        getCamelCasedString(propName, charDelimiter)
-                      )
-                    : null
-                },
-              })
-            }
-          }
-        }
+        const validateAndFixProp = getValidatePropFn({
+          allowedPrefixes: ALLOWED_PREFIXES,
+          eslintContext: context,
+          currentNode: node,
+        })
 
-        function handleSpreadOperator(attr, charDelimtiter) {
-          const props = getPropsFromObjectString(getPropIdentifier(attr, context))
+        function handleSpreadOperator (attr, charDelimtiter) {
+          const props = getPropsFromObjectString(
+            getPropIdentifier(attr, context)
+          )
           props.forEach((prop) => {
             const nodeToFix = attr?.argument?.properties?.find((node) => {
               return node?.key?.value === prop
@@ -84,12 +52,12 @@ module.exports = {
           })
         }
 
-        function handleCommonProps(attr, charDelimiter) {
+        function handleCommonProps (attr, charDelimiter) {
           const propName = getPropName(attr, context)
           validateAndFixProp(propName, attr.name, charDelimiter)
         }
 
-        function attributeHandler(attr) {
+        function attributeHandler (attr) {
           const invalidCharacters = [':']
 
           // add other cases here

@@ -18,7 +18,7 @@ module.exports = {
     },
     fixable: 'code',
   },
-  create(context) {
+  create (context) {
     return {
       JSXOpeningElement: (node) => {
         node.attributes.forEach((attr) => {
@@ -31,7 +31,7 @@ module.exports = {
               data: {
                 propName,
               },
-              fix(fixer) {
+              fix (fixer) {
                 return fixer?.replaceText
                   ? fixer.replaceText(
                       fixableNode,
