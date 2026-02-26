@@ -1,28 +1,35 @@
+const MESSAGE_FIXABLE_PROP =
+  'JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.'
+const MESSAGE_INVALID_PROP =
+  'JSX prop is invalid; the last character of the prop is not allowed. Not fixable.'
+const MESSAGE_STYLE_STRING_VALUE =
+  'JSX prop is invalid; the value of the style prop is a string. Fixable.'
+
 // TODO: there should be validation that the spreadObjectString is actually an object.
 // check beginning and end chars to validate?
 function getPropsFromObjectString (spreadObjectString) {
   function normalizeProp (propName) {
-    return propName.replaceAll("'", "")
+    return propName.replaceAll("'", '')
   }
 
   const props = []
-  let currentProp = ""
-  let keyWithValue = false;
-  [...spreadObjectString].forEach((c) => {
-    if (c === ",") {
+  let currentProp = ''
+  let keyWithValue = false
+  ;[...spreadObjectString].forEach((c) => {
+    if (c === ',') {
       props.push(normalizeProp(currentProp))
-      currentProp = ""
+      currentProp = ''
       keyWithValue = false
       return
     } else if (
-      c === "{" ||
-      c === "}" ||
-      c === " " ||
-      c === "\n" ||
+      c === '{' ||
+      c === '}' ||
+      c === ' ' ||
+      c === '\n' ||
       keyWithValue
     ) {
       return
-    } else if (c === ":") {
+    } else if (c === ':') {
       keyWithValue = true
       return
     }
@@ -51,7 +58,7 @@ function getCamelCasedString (str, charDelimiter) {
 }
 
 function stringify (obj) {
-  let stringified = ""
+  let stringified = ''
   Object.entries(obj).forEach(([key, val]) => {
     stringified += ` ${key}: '${val}',`
   })
@@ -60,17 +67,16 @@ function stringify (obj) {
   return `{${stringified.substring(0, stringified.length - 1)} }`
 }
 
-
 // example of 1 key-value pair: "mask-type:alpha" -> { maskType: 'alpha' }
 // example of 2 key-value pairs: "mask-type:alpha;mask-repeat:no-repeat" -> { maskType: 'alpha', maskRepeat: 'no-repeat' }
 // example of 3 key-value pairs: "mask-type:alpha;mask-repeat:no-repeat;mask-position:center" -> { maskType: 'alpha', maskRepeat: 'no-repeat', maskPosition: 'center' }
 function convertStringStyleValue (value) {
-   if (!value) return value
+  if (!value) return value
 
-  const styleRules = value.split(";")
+  const styleRules = value.split(';')
   const styleObject = styleRules.reduce((acc, rule) => {
-    const [key, val] = rule.split(":")
-    const camelCasedKey = getCamelCasedString(key.trim(), "-")
+    const [key, val] = rule.split(':')
+    const camelCasedKey = getCamelCasedString(key.trim(), '-')
     return { ...acc, [camelCasedKey]: val.trim() }
   }, {})
 
@@ -81,4 +87,7 @@ module.exports = {
   getPropsFromObjectString,
   getCamelCasedString,
   convertStringStyleValue,
+  MESSAGE_FIXABLE_PROP,
+  MESSAGE_INVALID_PROP,
+  MESSAGE_STYLE_STRING_VALUE,
 }

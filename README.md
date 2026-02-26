@@ -4,6 +4,8 @@ Enforce camelCased props instead of dashed props.
 
 NPM package: https://www.npmjs.com/package/eslint-plugin-svg-jsx
 
+Supports eslint 8, 9, and 10
+
 ## Add to your project
 
 1. Add the dependency: `yarn add -D eslint-plugin-svg-jsx` or `npm install --save-dev eslint-plugin-svg-jsx`
