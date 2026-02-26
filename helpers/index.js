@@ -1,4 +1,10 @@
-const { isCustomHTMLElement, getJSXTagName } = require('./jsx')
+const {
+  isCustomHTMLElement,
+  getJSXTagName,
+  getPropName,
+  getPropIdentifier,
+  isSpreadAttribute,
+} = require('./jsx')
 
 const MESSAGE_FIXABLE_PROP =
   'JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.'
@@ -123,7 +129,52 @@ function convertStringStyleValue (value) {
   return stringify(styleObject)
 }
 
+function createCamelCaseRule (charDelimiter) {
+  return {
+    meta: {
+      type: 'problem',
+      messages: {
+        fixableProp: MESSAGE_FIXABLE_PROP,
+        invalidProp: MESSAGE_INVALID_PROP,
+      },
+      fixable: 'code',
+    },
+    create (context) {
+      const ALLOWED_PREFIXES = ['aria', 'data']
+
+      return {
+        JSXOpeningElement: (node) => {
+          const validateAndFixProp = getValidatePropFn({
+            allowedPrefixes: ALLOWED_PREFIXES,
+            eslintContext: context,
+            currentNode: node,
+          })
+
+          node.attributes.forEach((attr) => {
+            if (isSpreadAttribute(attr)) {
+              const props = getPropsFromObjectString(
+                getPropIdentifier(attr, context)
+              )
+              props.forEach((prop) => {
+                const nodeToFix = attr?.argument?.properties?.find((node) => {
+                  return node?.key?.value === prop
+                })?.key
+
+                validateAndFixProp(prop, nodeToFix, charDelimiter)
+              })
+            } else {
+              const propName = getPropName(attr, context)
+              validateAndFixProp(propName, attr.name, charDelimiter)
+            }
+          })
+        },
+      }
+    },
+  }
+}
+
 module.exports = {
+  createCamelCaseRule,
   getValidatePropFn,
   getPropsFromObjectString,
   getCamelCasedString,
