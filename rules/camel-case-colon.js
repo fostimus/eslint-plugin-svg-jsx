@@ -1,1 +1,2 @@
-module.exports = require('../helpers').createCamelCaseRule(':')
+module.exports = require('../helpers/createCamelCaseRule')(':')
+
