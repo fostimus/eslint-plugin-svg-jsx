@@ -7,12 +7,12 @@ function getPropIdentifier(node, context) {
   const defaultCase = (node) => {
     return node.name
       ? node.name.name
-      : `${context.getSourceCode().getText(node.object)}.${node.property.name}` // needed for typescript-eslint parser
+      : `${(context.sourceCode ?? context.getSourceCode()).getText(node.object)}.${node.property.name}`; // needed for typescript-eslint parser
   }
 
   switch (node.type) {
     case 'JSXSpreadAttribute':
-      return context.getSourceCode().getText(node.argument)
+      return (context.sourceCode ?? context.getSourceCode()).getText(node.argument);
     case 'JSXIdentifier':
       return node.name
     case 'JSXMemberExpression':
