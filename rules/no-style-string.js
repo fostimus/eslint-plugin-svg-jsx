@@ -19,6 +19,7 @@ module.exports = {
       stringStyleValue: MESSAGE_STYLE_STRING_VALUE,
     },
     fixable: 'code',
+    schema: [],
   },
   create (context) {
     return {

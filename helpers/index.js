@@ -138,6 +138,7 @@ function createCamelCaseRule (charDelimiter) {
         invalidProp: MESSAGE_INVALID_PROP,
       },
       fixable: 'code',
+      schema: [],
     },
     create (context) {
       const ALLOWED_PREFIXES = ['aria', 'data']
