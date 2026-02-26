@@ -23,11 +23,13 @@
     "lint": "eslint 'rules/**/*.js' 'helpers/**/*.js'",
     "lint:fix": "yarn lint --fix",
     "lint:quiet": "NODE_ENV=test yarn lint --quiet",
-    "lint:quiet:fix": "yarn lint:quiet --fix"
+    "lint:quiet:fix": "yarn lint:quiet --fix",
+    "test": "mocha 'tests/**/*.js'"
   },
   "devDependencies": {
     "@babel/core": "^7.22.11",
     "@babel/eslint-parser": "^7.22.11",
+    "@babel/plugin-syntax-jsx": "7.28.6",
     "eslint": "^8.47.0",
     "eslint-config-nicenice": "^4.0.1",
     "eslint-config-prettier": "^9.0.0",
@@ -41,6 +43,7 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-camel-case": "^1.1.2",
+    "mocha": "11.7.5",
     "prettier": "^2.8.1"
   },
   "engines": {
