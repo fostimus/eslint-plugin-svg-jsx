@@ -3,7 +3,10 @@
  */
 
 const { getPropName } = require('../helpers/jsx')
-const { convertStringStyleValue } = require('../helpers')
+const {
+  convertStringStyleValue,
+  MESSAGE_STYLE_STRING_VALUE,
+} = require('../helpers')
 
 // ------------------------------------------------------------------------------
 // Rule Definition
@@ -13,8 +16,7 @@ module.exports = {
   meta: {
     type: 'problem',
     messages: {
-      stringStyleValue:
-        'JSX prop is invalid; the value of the style prop is a string. Fixable.',
+      stringStyleValue: MESSAGE_STYLE_STRING_VALUE,
     },
     fixable: 'code',
   },

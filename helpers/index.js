@@ -1,10 +1,17 @@
 const { isCustomHTMLElement, getJSXTagName } = require('./jsx')
 
+const MESSAGE_FIXABLE_PROP =
+  'JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.'
+const MESSAGE_INVALID_PROP =
+  'JSX prop is invalid; the last character of the prop is not allowed. Not fixable.'
+const MESSAGE_STYLE_STRING_VALUE =
+  'JSX prop is invalid; the value of the style prop is a string. Fixable.'
+
 function getValidatePropFn ({ allowedPrefixes, currentNode, eslintContext }) {
   return function validateAndFixProp (propName, fixableNode, charDelimiter) {
     if (
       propName?.includes &&
-      propName.includes(charDelimiter) &&
+      propName?.includes(charDelimiter) &&
       !isCustomHTMLElement(currentNode) &&
       !allowedPrefixes.some((prefix) => propName?.startsWith(prefix))
     ) {
@@ -14,23 +21,25 @@ function getValidatePropFn ({ allowedPrefixes, currentNode, eslintContext }) {
           messageId: 'invalidProp',
         })
       } else {
-        eslintContext.report({
-          node: currentNode,
-          messageId: 'fixableProp',
-          data: {
-            propName,
-            tagName: getJSXTagName(currentNode),
-            fixableCharacter: charDelimiter,
-          },
-          fix (fixer) {
-            return fixer?.replaceText && !!fixableNode
-              ? fixer.replaceText(
-                  fixableNode,
-                  getCamelCasedString(propName, charDelimiter)
-                )
-              : null
-          },
-        })
+        if (fixableNode) {
+          eslintContext.report({
+            node: currentNode,
+            messageId: 'fixableProp',
+            data: {
+              propName,
+              tagName: getJSXTagName(currentNode),
+              fixableCharacter: charDelimiter,
+            },
+            fix (fixer) {
+              return fixer?.replaceText
+                ? fixer.replaceText(
+                    fixableNode,
+                    getCamelCasedString(propName, charDelimiter)
+                  )
+                : null
+            },
+          })
+        }
       }
     }
   }
@@ -119,4 +128,7 @@ module.exports = {
   getPropsFromObjectString,
   getCamelCasedString,
   convertStringStyleValue,
+  MESSAGE_FIXABLE_PROP,
+  MESSAGE_INVALID_PROP,
+  MESSAGE_STYLE_STRING_VALUE,
 }

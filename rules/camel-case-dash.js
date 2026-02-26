@@ -7,7 +7,12 @@ const {
   getPropIdentifier,
   isSpreadAttribute,
 } = require('../helpers/jsx')
-const { getPropsFromObjectString, getValidatePropFn } = require('../helpers')
+const {
+  getPropsFromObjectString,
+  getValidatePropFn,
+  MESSAGE_FIXABLE_PROP,
+  MESSAGE_INVALID_PROP,
+} = require('../helpers')
 
 // ------------------------------------------------------------------------------
 // Rule Definition
@@ -17,10 +22,8 @@ module.exports = {
   meta: {
     type: 'problem',
     messages: {
-      fixableProp:
-        'JSX: found {{ fixableCharacter }} on prop {{ propName }} on {{ tagName }}. Fixable.',
-      invalidProp:
-        'JSX prop is invalid; the last character of the prop is not allowed. Not fixable.',
+      fixableProp: MESSAGE_FIXABLE_PROP,
+      invalidProp: MESSAGE_INVALID_PROP,
     },
     fixable: 'code',
   },
