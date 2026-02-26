@@ -46,6 +46,9 @@
     "mocha": "11.7.5",
     "prettier": "^2.8.1"
   },
+  "peerDependencies": {
+    "eslint": ">=8"
+  },
   "engines": {
     "node": ">=5.0.0"
   },
